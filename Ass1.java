@@ -9,13 +9,17 @@ class citizen{
     int age;
     String citizen_id;
     String status="REGISTERED";
-    String vaccine;
+    vaccine vac;
+    int vaccine_day;
+    int doses;
     public citizen(String name, int age, String citizen_id){
         this.name=name;
         this.age=age;
         this.citizen_id=citizen_id;
         this.status=status;
-        this.vaccine=vaccine;
+        this.vaccine=vac;
+        this.vaccine_day=vaccine_day;
+        this.doses=doses;
     }
 }
 class vaccine{
@@ -30,11 +34,13 @@ class vaccine{
 }
 class hospital{
     class slot{
-        String vac_name;
+        vaccine vac;
         int quantity;
-        public slot(String vac_name, int quantity){
-            this.vac_name=vac_name;
+        int day;
+        public slot(vaccine vac, int quantity, int day){
+            this.vac=vac;
             this.quantity=quantity;
+            this.day=day;
         }
     }
     String name;
@@ -60,22 +66,22 @@ class hospital{
         }
         int num=Reader.nextint();
         vaccine vac=vaccine_arr.get(num);
-        ArrayList<slot> day_slots= slots.get(day);
-        int n= day_slots.size();
-        int final_quantity=vac_quan;
-        boolean exists=false;
-        for (int i=0;i<n;i++){
-            if (day_slots.get(i).vac_name.equals(vac.name)){
-                exists=true;
-                final_quantity=day_slots.get(i).quantity+vac_quan;
-                day_slots.get(i).quantity=final_quantity;
+        boolean day_present=false;
+        for (int i=0;i<slots.size();i++){
+            if (slots.get(i).get(0).day==day){
+                day_present=true;
+                slot temp_slot= new slot(vac,vac_quan,day);
+                slots.get(i).add(temp_slot);
+                break;
             }
         }
-        if (exists==false){
-            slot temp_slot= new slot(vac.name,vac_quan);
-            day_slots.add(temp_slot);
+        if (day_present==false){
+            slot temp_slot= new slot(vac,vac_quan,day);
+            ArrayList<slot> temp_day= new ArrayList<slot>();
+            temp_day.add(temp_slot);
+            slots.add(temp_day);
         }
-        System.out.println("Slot added to hospital "+hospital_id+" for Day:"+day+", Available quantity:"+final_quantity+"of Vaccine "+vac.name);
+        System.out.println("Slot added to hospital "+hospital_id+" for Day:"+day+", Available quantity:"+vac_quan+"of Vaccine "+vac.name);
     }
 }
 
@@ -159,16 +165,8 @@ class task_functions{
             System.out.println("Enter valid person ID");
             return;
         }
-        boolean citizen_exists=false;
-        for (int i=0;i<citizen_arr.size();i++){
-            citizen temp=citizen_arr.get(i);
-            if (temp.citizen_id.equals(id)){
-                citizen_exists=true;
-                break;
-            }
-        }
-        if (citizen_exists==false){
-            System.out.println("Citizen not found");
+        if (person.status.equals("FULLY VACCINATED")){ 
+            System.out.println("Already fully vaccinated");
             return;
         }
         System.out.println("1.Search by area");
@@ -180,13 +178,13 @@ class task_functions{
             return;
         }
         else if (input==1){
-            search_area(hospital_arr,person);
+            search_area(hospital_arr,person,vaccine_arr);
         }
         else {
             search_vaccine(hospital_arr,vaccine_arr,person);
         }
     }
-    public static void search_area(ArrayList<hospital> hospital_arr,citizen person) throws IOException{
+    public static void search_area(ArrayList<hospital> hospital_arr,citizen person,ArrayList<vaccine> vaccine_arr) throws IOException{
         System.out.println("Enter pincode:");
         String area=Reader.next();
         int size=hospital_arr.size();
@@ -212,10 +210,145 @@ class task_functions{
             System.out.println("Invalid hospital ID");
             return;
         }
-
+        int min_day=0;
+        if (person.status=="PARTIALLY VACCINATED"){
+            min_day=person.vac.gap_doses+person.vaccine_day;
+        }
+        ArrayList<slot> slots_avail= new ArrayList<slot>();
+        int times=final_hos.slots.size();
+        for (int i=0;i<times;i++){
+            ArrayList<slot> day_slots=final_hos.get(i);
+            if ((day_slots.get(0).day)>=min_day){
+                int v_times= day_slots.size();
+                for (int j=0;j<v_times;j++){
+                    if (person.status=="PARTIALLY VACCINATED"){
+                        if (day_slots.get(i).vac==person.vac){
+                            slots_avail.add(day_slots.get(i));
+                        }
+                    }
+                    else{
+                        slots_avail.add(day_slots.get(i));
+                    }
+                }
+            }
+        }
+        for (int i=0;i<slots_avail.size();i++){
+            slot temp_slot=slots_avail.get(i);
+            System.out.print(i+"-> Day:"+temp_slot.day+"Available Qty:"+temp_slot.quantity+"Vaccine:"+temp_slot.vac.name);
+        }
+        if (slots_avail.size()==0){
+            System.out.println("No slots available");
+            return;
+        }
+        System.out.print("Choose Slot: ");
+        int slot_num=Reader.nextint();
+        slots_avail.get(slot_num).quantity--;
+        person.doses++;
+        if (person.doses==person.vac.doses){
+            person.status="FULLY VACCINATED";
+        }
+        else if (person.status="REGISTERED"){
+            person.status="PARTIALLY VACCINATED";
+            person.vac=slots_avail.get(slot_num).vac;
+        }
+        person.vaccine_day=slots_avail.get(slot_num).day;
+        System.out.println(person.name+" vaccinated with"+slots_avail.get(slot_num).vac.name);
     }
     public static void search_vaccine(ArrayList<hospital> hospital_arr,ArrayList<vaccine> vaccine_arr,citizen person){
-
+        int vac_times=vaccine_arr.size();
+        System.out.print("Enter Vaccine name: ");
+        String vac_name=Reader.next();
+        boolean vac_exists=false;
+        for (int i=0;i<vac_times;i++){
+            vaccine vac_temp=vaccine_arr.get(i);
+            if (vac_name.equals(vac_temp.name)){
+                vac_exists=true;
+                break;
+            }
+        }
+        if (vac_exists=false){
+            System.out.println("Not a valid vaccine");
+            return;
+        }
+        ArrayList<hospital> matches= new ArrayList<hospital>();
+        int hos_size=hospital_arr.size();
+        for (int i=0;i<hos_size;i++){
+            hospital temp_hospital=hospital_arr.get(i);
+            int days_size=temp_hospital.slots.size();
+            boolean hospital_valid=false;
+            for (int j=0;j<days_size;j++){
+                if (hospital_valid==true){
+                    break;
+                }
+                ArrayList<slot> day_slots=temp_hospital.slots.get(j);
+                int size=day_slots.size();
+                for (int k=0;k<size;k++){
+                    if (day_slots.get(k).vac.name.equals(vac_name)){
+                        hospital_valid=true;
+                        matches.add(temp_hospital);
+                        System.out.println(temp_hospital.hospital_id+" "+temp_hospital.name);
+                        break;
+                    }
+                }
+            }
+        }
+        System.out.print("Enter hospital id: ");
+        String hos_id=Reader.next();
+        boolean exists=false;
+        for (int i=0;i<matches.size();i++){
+            hospital final_hos=matches.get(i);
+            if (hos_id.equals(final_hos.hospital_id)){
+                exists=true;
+                break;
+            }
+        }
+        if (exists=false){
+            System.out.println("Invalid hospital ID");
+            return;
+        }
+        int min_day=0;
+        if (person.status=="PARTIALLY VACCINATED"){
+            min_day=person.vac.gap_doses+person.vaccine_day;
+        }
+        ArrayList<slot> slots_avail= new ArrayList<slot>();
+        int times=final_hos.slots.size();
+        for (int i=0;i<times;i++){
+            ArrayList<slot> day_slots=final_hos.get(i);
+            if ((day_slots.get(0).day)>=min_day){
+                int v_times= day_slots.size();
+                for (int j=0;j<v_times;j++){
+                    if (person.status=="PARTIALLY VACCINATED"){
+                        if (day_slots.get(i).vac==person.vac){
+                            slots_avail.add(day_slots.get(i));
+                        }
+                    }
+                    else{
+                        slots_avail.add(day_slots.get(i));
+                    }
+                }
+            }
+        }
+        for (int i=0;i<slots_avail.size();i++){
+            slot temp_slot=slots_avail.get(i);
+            System.out.print(i+"-> Day:"+temp_slot.day+"Available Qty:"+temp_slot.quantity+"Vaccine:"+temp_slot.vac.name);
+        }
+        if (slots_avail.size()==0){
+            System.out.println("No slots available");
+            return;
+        }
+        System.out.print("Choose Slot: ");
+        int slot_num=Reader.nextint();
+        slots_avail.get(slot_num).quantity--;
+        person.doses++;
+        if (person.doses==person.vac.doses){
+            person.status="FULLY VACCINATED";
+        }
+        else if (person.status="REGISTERED"){
+            person.status="PARTIALLY VACCINATED";
+            person.vac=slots_avail.get(slot_num).vac;
+        }
+        person.vaccine_day=slots_avail.get(slot_num).day;
+        System.out.println(person.name+" vaccinated with"+slots_avail.get(slot_num).vac.name);
     }
 }
 
