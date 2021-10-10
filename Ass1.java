@@ -317,13 +317,15 @@ class task_functions{
             if ((day_slots.get(0).day)>=min_day){
                 int v_times= day_slots.size();
                 for (int j=0;j<v_times;j++){
-                    if (person.status=="PARTIALLY VACCINATED"){
-                        if (day_slots.get(i).vac==person.vac){
-                            slots_avail.add(day_slots.get(i));
+                    if(day_slots.get(j).vac.name.equals(vac_name)){
+                        if (person.status=="PARTIALLY VACCINATED"){
+                            if (day_slots.get(j).vac==person.vac){
+                                slots_avail.add(day_slots.get(j));
+                            }
                         }
-                    }
-                    else{
-                        slots_avail.add(day_slots.get(i));
+                        else{
+                            slots_avail.add(day_slots.get(j));
+                        }
                     }
                 }
             }
