@@ -8,11 +8,11 @@ class citizen{
     String name;
     int age;
     String citizen_id;
-    String status="REGISTERED";
+    String status;
     vaccine vac;
     int vaccine_day;
     int doses;
-    public citizen(String name, int age, String citizen_id){
+    public citizen(String name, int age, String citizen_id,String status){
         this.name=name;
         this.age=age;
         this.citizen_id=citizen_id;
@@ -21,7 +21,55 @@ class citizen{
         this.vaccine_day=vaccine_day;
         this.doses=doses;
     }
+
+    public static void add_citizen(ArrayList<citizen> citizen_arr) throws Exception{
+        System.out.print("Citizen Name: ");
+        String name= Reader.next();
+        System.out.print("Age: ");
+        int age= Reader.nextint();
+        System.out.print("Unique ID: ");
+        String id= Reader.next();
+        if (age<18){
+            System.out.println("Only above 18 are allowed");
+            return;
+        }
+        String status="REGISTERED";
+        citizen temp= new citizen(name,age,id,status);
+        citizen_arr.add(temp);
+        System.out.println("Citizen Name:"+name+", Age:"+age+", Unique ID:"+id);
+    }
+
+    public static void check_status(ArrayList<citizen> citizen_arr)throws IOException{
+        System.out.print("Enter patient Unique ID: ");
+        String id= Reader.next();
+        citizen person=null;
+        boolean person_exists=false;
+        for (int i=0;i<citizen_arr.size();i++){
+            if (id.equals(citizen_arr.get(i).citizen_id)){
+                person=citizen_arr.get(i);
+                person_exists=true;
+                break;
+            }
+        }
+        if (person_exists==false){
+            System.out.println("Patient not registered");
+            return;
+        }
+        System.out.println(person.status);
+        if (person.status.equals("Citizen REGISTERED")){
+        }
+        else if (person.status.equals("PARTIALLY VACCINATED")){
+            System.out.println("Vaccine given: "+person.vac.name);
+            System.out.println("Number of doses given: "+person.doses);
+            System.out.println("Due date: "+(person.vaccine_day+person.vac.gap_doses));
+        }
+        else if(person.status.equals("FULLY VACCINATED")){
+            System.out.println("Vaccine given: "+person.vac.name);
+            System.out.println("Number of doses given: "+person.doses);
+        }  
+    }
 }
+
 class vaccine{
     String name;
     int doses;
@@ -31,8 +79,25 @@ class vaccine{
         this.doses= doses;
         this.gap_doses= gap_doses;
     }
+
+    public static void add_vaccine(ArrayList<vaccine> vaccine_arr) throws Exception{
+        System.out.print("Vaccine Name: ");
+        String name= Reader.next();
+        System.out.print("Number of doses: ");
+        int doses= Reader.nextint();
+        int gap_doses=0;
+        if (doses>1){
+            System.out.print("Gap between doses: ");
+            gap_doses= Reader.nextint();
+        }
+        vaccine temp= new vaccine(name, doses, gap_doses);
+        vaccine_arr.add(temp);
+        System.out.println("Vaccine Name:"+name+", Number of doses:"+doses+", Gap between doses:"+ gap_doses);
+    }
 }
+
 class hospital{
+
     class slot{
         vaccine vac;
         int quantity;
@@ -43,6 +108,7 @@ class hospital{
             this.day=day;
         }
     }
+
     String name;
     String pincode;
     String hospital_id;
@@ -53,6 +119,18 @@ class hospital{
         this.hospital_id=hospital_id;
         this.slots=slots;
     }
+
+    public static void add_hospital(ArrayList<hospital> hospital_arr, int hospital_count) throws Exception{
+        System.out.print("Hospital Name: ");
+        String name= Reader.next();
+        System.out.print("Pincode: ");
+        String pincode=Reader.next();
+        String id=String.valueOf(hospital_count);
+        hospital temp= new hospital(name,pincode,id);
+        hospital_arr.add(temp);
+        System.out.println("Hospital Name: "+name+", PinCode: "+pincode+", Unique ID: "+id);
+    }
+
     public void create_slot(ArrayList<vaccine> vaccine_arr) throws IOException{
         System.out.print("Enter Day Number: ");
         int day= Reader.nextint();
@@ -83,9 +161,37 @@ class hospital{
         }
         System.out.println("Slot added to hospital "+hospital_id+" for Day: "+day+", Available quantity:"+vac_quan+" of Vaccine "+vac.name);
     }
+    
+    public static void list_slots(ArrayList<hospital> hospital_arr)throws IOException{
+        System.out.print("Enter hospital Id: ");
+        String hos_id=Reader.next();
+        boolean exists=false;
+        hospital hos=null;
+        for (int i=0;i<hospital_arr.size();i++){
+            hos=hospital_arr.get(i);
+            if (hos_id.equals(hos.hospital_id)){
+                exists=true;
+                break;
+            }
+        }
+        if (exists=false){
+            System.out.println("Invalid hospital ID");
+            return;
+        }
+        int times=hos.slots.size();
+        for (int i=0;i<times;i++){
+            ArrayList<hospital.slot> day_slots=hos.slots.get(i);
+            int v_times= day_slots.size();
+            for (int j=0;j<v_times;j++){
+                hospital.slot temp_slot=day_slots.get(j);
+                System.out.println("Day: "+temp_slot.day+" Vaccine: "+temp_slot.vac.name+" Available Qty: "+temp_slot.quantity);
+            }
+        }
+    }
 }
 
 class task_functions{
+
     public static int menu() throws Exception{
         System.out.println("---------------------------------");
         System.out.println("1. Add Vaccine");
@@ -99,45 +205,7 @@ class task_functions{
         System.out.println("---------------------------------");
         return Reader.nextint();
     }
-    public static void add_vaccine(ArrayList<vaccine> vaccine_arr) throws Exception{
-        System.out.print("Vaccine Name: ");
-        String name= Reader.next();
-        System.out.print("Number of doses: ");
-        int doses= Reader.nextint();
-        int gap_doses=0;
-        if (doses>1){
-            System.out.print("Gap between doses: ");
-            gap_doses= Reader.nextint();
-        }
-        vaccine temp= new vaccine(name, doses, gap_doses);
-        vaccine_arr.add(temp);
-        System.out.println("Vaccine Name:"+name+", Number of doses:"+doses+", Gap between doses:"+ gap_doses);
-    }
-    public static void add_hospital(ArrayList<hospital> hospital_arr, int hospital_count) throws Exception{
-        System.out.print("Hospital Name: ");
-        String name= Reader.next();
-        System.out.print("Pincode: ");
-        String pincode=Reader.next();
-        String id=String.valueOf(hospital_count);
-        hospital temp= new hospital(name,pincode,id);
-        hospital_arr.add(temp);
-        System.out.println("Hospital Name: "+name+", PinCode: "+pincode+", Unique ID: "+id);
-    }
-    public static void add_citizen(ArrayList<citizen> citizen_arr) throws Exception{
-        System.out.print("Citizen Name: ");
-        String name= Reader.next();
-        System.out.print("Age: ");
-        int age= Reader.nextint();
-        System.out.print("Unique ID: ");
-        String id= Reader.next();
-        if (age<18){
-            System.out.println("Only above 18 are allowed");
-            return;
-        }
-        citizen temp= new citizen(name,age,id);
-        citizen_arr.add(temp);
-        System.out.println("Citizen Name:"+name+", Age:"+age+", Unique ID:"+id);
-    }
+
     public static void create_slot(ArrayList<vaccine> vaccine_arr, ArrayList<hospital> hospital_arr) throws IOException{
         System.out.print("Enter hospital ID: ");
         String id= Reader.next();
@@ -154,6 +222,7 @@ class task_functions{
         }
         System.out.println("Hospital with hospital ID "+id+" not found.");
     }
+
     public static void book_slot(ArrayList<citizen> citizen_arr, ArrayList<hospital> hospital_arr, ArrayList<vaccine> vaccine_arr) throws IOException{
         System.out.print("Enter patient unique ID: ");
         String person_id= Reader.next();
@@ -189,6 +258,7 @@ class task_functions{
             search_vaccine(hospital_arr,vaccine_arr,person);
         }
     }
+
     public static void search_area(ArrayList<hospital> hospital_arr,citizen person,ArrayList<vaccine> vaccine_arr) throws IOException{
         System.out.print("Enter Pincode: ");
         String area=Reader.next();
@@ -260,6 +330,7 @@ class task_functions{
         person.vaccine_day=slots_avail.get(slot_num).day;
         System.out.println(person.name+" vaccinated with "+slots_avail.get(slot_num).vac.name);
     }
+    
     public static void search_vaccine(ArrayList<hospital> hospital_arr,ArrayList<vaccine> vaccine_arr,citizen person) throws IOException{
         int vac_times=vaccine_arr.size();
         System.out.print("Enter Vaccine name: ");
@@ -301,6 +372,7 @@ class task_functions{
         System.out.print("Enter hospital id: ");
         String hos_id=Reader.next();
         hospital final_hos=null;
+        boolean exists=false;
         for (int i=0;i<matches.size();i++){
             final_hos=matches.get(i);
             if (hos_id.equals(final_hos.hospital_id)){
@@ -308,7 +380,7 @@ class task_functions{
                 break;
             }
         }
-        if (exists=false){
+        if (exists==false){
             System.out.println("Invalid hospital ID");
             return;
         }
@@ -348,19 +420,15 @@ class task_functions{
         int slot_num=Reader.nextint();
         slots_avail.get(slot_num).quantity--;
         person.doses++;
-        if (person.doses==person.vac.doses){
-            person.status="FULLY VACCINATED";
-        }
-        else if (person.status.equals("REGISTERED")){
+        if (person.status.equals("REGISTERED")){
             person.status="PARTIALLY VACCINATED";
             person.vac=slots_avail.get(slot_num).vac;
         }
+        if (person.doses==person.vac.doses){
+            person.status="FULLY VACCINATED";
+        }
         person.vaccine_day=slots_avail.get(slot_num).day;
         System.out.println(person.name+" vaccinated with "+slots_avail.get(slot_num).vac.name);
-    }
-    public static void list_slots(ArrayList<hospital> hospital_arr){
-        System.out.print("Enter hospital Id: ");
-        String hos_id=Reader.next();
     }
 }
 
@@ -382,14 +450,14 @@ public class Ass1{
                 break;
             }
             if (task==1){
-                task_functions.add_vaccine(vaccine_arr);
+                vaccine.add_vaccine(vaccine_arr);
             }
             if (task==2){
                 hospital_count++;
-                task_functions.add_hospital(hospital_arr,hospital_count);
+                hospital.add_hospital(hospital_arr,hospital_count);
             }
             if (task==3){
-                task_functions.add_citizen(citizen_arr);
+                citizen.add_citizen(citizen_arr);
             }
             if (task==4){
                 task_functions.create_slot(vaccine_arr,hospital_arr);
@@ -398,7 +466,10 @@ public class Ass1{
                 task_functions.book_slot(citizen_arr,hospital_arr,vaccine_arr);
             }
             if (task==6){
-                task_functions.list_slots(hospital_arr);
+                hospital.list_slots(hospital_arr);
+            }
+            if (task==7){
+                citizen.check_status(citizen_arr);
             }
         }
     }
