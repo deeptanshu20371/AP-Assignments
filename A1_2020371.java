@@ -432,7 +432,7 @@ class task_functions{
     }
 }
 
-public class Ass1{
+public class A1_2020371{
     public static void main(String[] args) throws Exception {
         Reader.init(System.in);
         
