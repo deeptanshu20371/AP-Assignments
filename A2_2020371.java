@@ -5,10 +5,54 @@ import java.lang.*;
 import java.util.ArrayList;
 
 interface person_interface{
-    static ArrayList<person_interface> person_arr = new ArrayList<person_interface>();
+    class comment{
+        String com;
+        Date date;
+        person poster;
+        public comment(String com, Date date, person poster){
+            this.com=com;
+            this.date=date;
+            this.poster=poster;
+        }
+    }
+    static ArrayList<comment> comments_arr= new ArrayList<comment>();
+    static ArrayList<person_interface> instructor_arr = new ArrayList<person_interface>();
+    static ArrayList<person_interface> student_arr = new ArrayList<person_interface>();
     String id=null;
     void add_comment();
     void view_comment();
+}
+
+private class student implements person_interface{
+    @Override
+    public void add_comment(){
+        System.out.print("Enter comment: ");
+        String com= Reader.next();
+        Date date= new Date();
+        comment c= new comment(com,date,this);
+        comments_arr.add(comment);
+    }
+    @Override
+    public void view_comment(){
+        int size= person_interface.comments_arr.size();
+        for (int i=0;i<size;i++){
+            person_interface.comment com=person_interface.comments_arr.get(i);
+            System.out.println(com.com+" - "+com.poster.id);
+            System.out.println(com.date);
+            System.out.println("");
+        }
+    }
+}
+
+private class instructor implements person_interface{
+    @Override
+    public void add_comment(){
+        System.out.print("Enter comment: ");
+        String com= Reader.next();
+        Date date= new Date();
+        comment c= new comment(com,date,this);
+        comments_arr.add(comment);
+    }
 }
 
 interface lecture_interface{
@@ -30,13 +74,7 @@ interface assessment_interface{
     void assessment_submit();
 }
 
-private class student{
 
-}
-
-private class instructor{
-
-}
 
 private class menu{
     public int start(){
@@ -71,6 +109,16 @@ private class menu{
         int ret= Reader.nextint();
         return ret;
     }
+    public instructor print_instructors(){
+        System.out.println("Instructors:");
+        int size=person_interface.instructor_arr.size();
+        for (int i=0;i<size;i++){
+            instructor ins= person_interface.instructor_arr.get(i);
+            System.out.println(i+". "+ins.id);
+        }
+        int num=Reader.nextint();
+        return (person_interface.instructor_arr.get(num));
+    }
 }
 
 public class A2_2020371 {
@@ -85,6 +133,7 @@ public class A2_2020371 {
                 break;
 
             if (start_num==1){
+                curr_instructor= menu.print_instructors();
                 int instructor_num=instructor();
                 while (true){
                     if (instructor_num==9)
