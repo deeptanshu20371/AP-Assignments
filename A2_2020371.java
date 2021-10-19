@@ -18,12 +18,16 @@ interface person_interface{
     static ArrayList<comment> comments_arr= new ArrayList<comment>();
     static ArrayList<person_interface> instructor_arr = new ArrayList<person_interface>();
     static ArrayList<person_interface> student_arr = new ArrayList<person_interface>();
-    String id=null;
     void add_comment();
     void view_comment();
 }
 
 private class student implements person_interface{
+    String id;
+    private student(String id){
+        this.id=id;
+    }
+
     @Override
     public void add_comment(){
         System.out.print("Enter comment: ");
@@ -45,6 +49,11 @@ private class student implements person_interface{
 }
 
 private class instructor implements person_interface{
+    String id;
+    private instructor(String id){
+        this.id=id;
+    }
+
     @Override
     public void add_comment(){
         System.out.print("Enter comment: ");
@@ -53,13 +62,95 @@ private class instructor implements person_interface{
         comment c= new comment(com,date,this);
         comments_arr.add(comment);
     }
+    @Override
+    public void view_comment(){
+        int size= person_interface.comments_arr.size();
+        for (int i=0;i<size;i++){
+            person_interface.comment com=person_interface.comments_arr.get(i);
+            System.out.println(com.com+" - "+com.poster.id);
+            System.out.println(com.date);
+            System.out.println("");
+        }
+    }
 }
 
 interface lecture_interface{
     static ArrayList<lecture_interface> lecture_arr= new ArrayList<lecture_interface>();
-    String title=null;
     void lecture_input();
     void lecture_view();
+}
+
+private class lecture_slides implements lecture_interface{
+    String title;
+    int num;
+    String[] slides;
+    Date date;
+    instructor poster;
+    public lecture_slides(String title,int num, String[] slides,Date date, instructor poster ){
+        this.title=title;
+        this.num=num;
+        this.slides=slides;
+        this.poster=poster;
+        this.date=date;
+    }
+    public void lecture_input(instructor ins){
+        System.out.print("Enter the topic of slides: ");
+        String t= Reader.next();
+        System.out.println("Enter the number of slides: ");
+        int n= Reader.nextint();
+        String[] arr= new String[n];
+        System.out.println("Enter the content of slides");
+        for (int i=0; i<n; i++){
+            System.out.print("Content of slide "+i+": ");
+            String content= Reader.next();
+            arr[i]=content;
+        }
+        Date d=new Date();
+        lecture_slides l=new lecture_slides(t,n,arr,d,ins);
+        lecture_interface.lecture_arr.add(l);
+    }
+    public void lecture_view(){
+        System.out.println("Title: "+this.title);
+        for (int i=0;i<this.num;i++){
+            System.out.println("Slide "+i+": "+this.slides[i]);
+        }
+        System.out.println("Number of slides: "+this.num);
+        System.out.println("Date of upload: "+this.date);
+        System.out.println("Uploaded by: "+this.poster.id);
+    }
+}
+
+private class lecture_video implements lecture_interface{
+    String title;
+    String video;
+    Date date;
+    instructor poster;
+    public lecture_video(String title,String video,Date date, instructor poster ){
+        this.title=title;
+        this.video=video;
+        this.poster=poster;
+        this.date=date;
+    }
+    public void lecture_input(instructor ins){
+        System.out.print("Enter the topic of video: ");
+        String t= Reader.next();
+        System.out.print("Enter the filename of video: ");
+        String vid= Reader.next();
+        int s_size=vid.length();
+        if (vid.substring(s_size-5).equals(".mp4")==false){
+            System.out.println("Video file not in correct format.");
+            return;
+        }
+        Date d = new Date();
+        lecture_video v=new lecture_video(t, vid, d, ins);
+        lecture_interface.lecture_arr.add(v);
+    }
+    public void lecture_view(){
+        System.out.println("Title: "+this.title);
+        System.out.println("Video file: "+this.video);
+        System.out.println("Date of upload: "+this.date);
+        System.out.println("Uploaded by: "+this.poster.id);
+    }
 }
 
 interface assessment_interface{
