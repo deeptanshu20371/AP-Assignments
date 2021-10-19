@@ -8,8 +8,8 @@ interface person_interface{
     class comment{
         String com;
         Date date;
-        person_interface poster;
-        public comment(String com, Date date, person_interface poster){
+        String poster;
+        public comment(String com, Date date, String poster){
             this.com=com;
             this.date=date;
             this.poster=poster;
@@ -18,6 +18,8 @@ interface person_interface{
     String id=null;
     static ArrayList<comment> comments_arr= new ArrayList<comment>();
     void view_comment();
+    void add_comment(String p) throws IOException;
+    void view_assessment();
 }
 
 class student implements person_interface{
@@ -28,15 +30,91 @@ class student implements person_interface{
         this.id=id;
         this.ass_arr=ass_arr;
     }
+    
     @Override
     public void view_comment(){
         int size= person_interface.comments_arr.size();
         for (int i=0;i<size;i++){
             person_interface.comment com=person_interface.comments_arr.get(i);
-            System.out.println(com.com+" - "+com.poster.id);
+            System.out.println(com.com+" - "+com.poster);
             System.out.println(com.date);
             System.out.println("");
         }
+    }
+    
+    @Override
+    public void add_comment(String stu) throws IOException{
+        Scanner scanner=new Scanner(System.in);
+        System.out.print("Enter comment: ");
+        String com= scanner.nextLine();
+        Date date= new Date();
+        person_interface.comment c= new person_interface.comment(com,date,stu);
+        c.poster=stu;
+        person_interface.comments_arr.add(c);
+    }
+    
+    @Override
+    public void view_assessment(){
+        ArrayList<assessment_interface> arr= assessment_interface.assessment_arr;
+        int size=arr.size();
+        for (int i=0;i<size;i++){
+            assessment_interface assess=arr.get(i);
+            System.out.print("ID: "+i+" ");
+            assess.assessment_view();
+            System.out.println("---------");
+        }
+    }
+    public void view_grades(int id){
+        System.out.println("Graded Submissions");
+        ArrayList<assessment_interface> arr= assessment_interface.assessment_arr;
+        int size=arr.size();
+        for (int i=0;i<size;i++){
+            assessment_interface assess=arr.get(i);
+            if (assess.grades.get(id).submission==null){
+                continue;
+            }
+            if (assess.grades.get(id).grade==0){
+                continue;
+            }
+            System.out.println("Submission:"+assess.grades.get(id).submission);
+            System.out.println("Marks scored: "+assess.grades.get(id).grade);
+            System.out.println("Graded by: "+assess.grades.get(id).grader);
+        }
+        System.out.println();
+        System.out.println("Ungraded Submissions");
+        for (int i=0;i<size;i++){
+            assessment_interface assess=arr.get(i);
+            if (assess.grades.get(id).submission==null){
+                continue;
+            }
+            if (assess.grades.get(id).grade!=0){
+                continue;
+            }
+            System.out.println("Submission:"+assess.grades.get(id).submission);
+        }
+    }
+    public void submit(int id)throws IOException{
+        Scanner scanner=new Scanner(System.in);
+        System.out.println("Pending assignments");
+        ArrayList<assessment_interface> arr= assessment_interface.assessment_arr;
+        int size=arr.size();
+        for (int i=0;i<size;i++){
+            assessment_interface assess=arr.get(i);
+            if (assess.grades.get(id).submission==null){
+                System.out.print("ID:"+i+" ");
+                assess.assessment_view();
+            }
+        }
+        System.out.print("Enter ID of assessment: ");
+        int ass_id=Reader.nextint();    
+        System.out.print("Enter filename of assignment: ");
+        String filename= scanner.nextLine();
+        int s_size=filename.length();
+        if (filename.substring(s_size-4).equals(".zip")==false){
+            System.out.println("Subimission not in correct format.");
+            return;
+        }
+        arr.get(ass_id).assessment_submit(filename,id);
     }
 }
 
@@ -46,15 +124,109 @@ class instructor implements person_interface{
     public instructor(String id){
         this.id=id;
     }
+    
     @Override
     public void view_comment(){
         int size= person_interface.comments_arr.size();
         for (int i=0;i<size;i++){
             person_interface.comment com=person_interface.comments_arr.get(i);
-            System.out.println(com.com+" - "+com.poster.id);
+            System.out.println(com.com+" - "+com.poster);
             System.out.println(com.date);
             System.out.println("");
         }
+    }
+    public void add_assessment(instructor ins)throws IOException{
+        System.out.println("1.Add Assignment");
+        System.out.println("2.Add quiz");
+        int num=Reader.nextint();
+        if (num==1){
+            Scanner scanner= new Scanner(System.in);
+            System.out.print("Enter problem statement: ");
+            String ques= scanner.nextLine();
+            System.out.print("Enter max marks: ");
+            int max_marks=Reader.nextint();
+            assignment ass=new assignment(ques, ins, max_marks);
+            int size= student.student_arr.size();
+            for (int i=0;i<size;i++){
+                assessment_interface.stu_assessment grade= new assessment_interface.stu_assessment();
+                ass.grades.add(grade);
+            }
+            assignment.assessment_arr.add(ass);
+        }
+        else{
+            Scanner scanner= new Scanner(System.in);
+            System.out.print("Enter quiz question: ");
+            String ques= scanner.nextLine();
+            quiz q= new quiz(ques, ins);
+            quiz.assessment_arr.add(q);
+        }
+    }
+    
+    @Override
+    public void add_comment(String ins) throws IOException{
+        Scanner scan=new Scanner(System.in);
+        System.out.print("Enter comment: ");
+        String com= scan.nextLine();
+        Date date= new Date();
+        person_interface.comment c= new person_interface.comment(com,date,ins);
+        c.poster=ins;
+        person_interface.comments_arr.add(c);
+    }
+    
+    @Override
+    public void view_assessment(){
+        ArrayList<assessment_interface> arr= assessment_interface.assessment_arr;
+        int size=arr.size();
+        for (int i=0;i<size;i++){
+            assessment_interface assess=arr.get(i);
+            System.out.print("ID: "+i+" ");
+            assess.assessment_view();
+            System.out.println("---------");
+        }
+    }
+    public void grade_assignment(instructor ins)throws IOException{
+        System.out.println("List of assessments");
+        ArrayList<assessment_interface> ass_arr= assessment_interface.assessment_arr;
+        view_assessment();
+        int ass_num=Reader.nextint();
+        assessment_interface ass= ass_arr.get(ass_num);
+        int size= student.student_arr.size();
+        for (int i=0;i<size;i++){
+            if (ass.grades.get(i).submission==null){
+                continue;
+            }
+            System.out.println(i+". "+student.student_arr.get(i).id);
+        }
+        int stu_num=Reader.nextint();
+        System.out.println("Submission: "+ass.grades.get(stu_num).submission);
+        System.out.println("----------------");
+        System.out.println("Max Marks:"+ass.get_max());
+        System.out.print("Marks scored: ");
+        int marks=Reader.nextint();
+        if (marks>ass.get_max()){
+            System.out.println("Marks cannot be more than the maximum marks");
+            return;
+        }
+        ass.grades.get(stu_num).grade=marks;
+        ass.grades.get(stu_num).grader=ins.id;
+        ass.graded();
+    }
+    public void close_assessment()throws IOException{
+        System.out.println("List of open assessments");
+        ArrayList<assessment_interface> arr= assessment_interface.assessment_arr;
+        int size=arr.size();
+        for (int i=0;i<size;i++){
+            assessment_interface assess=arr.get(i);
+            if (assess.assessment_closed==true){
+                continue;
+            }
+            System.out.print("ID: "+i+" ");
+            assess.assessment_view();
+            System.out.println("---------");
+        }
+        System.out.print("Enter ID of assignment to close: ");
+        int ass_id=Reader.nextint();
+        arr.get(ass_id).assessment_close();
     }
 }
 
@@ -112,26 +284,90 @@ class lecture_video implements lecture_interface{
 }
 
 interface assessment_interface{
+    class stu_assessment{
+        String submission;
+        int grade;
+        String grader;
+    }
     static ArrayList<assessment_interface> assessment_arr =new ArrayList<assessment_interface>();
+    int stu_num=student.student_arr.size();
+    ArrayList<stu_assessment> grades= new ArrayList<stu_assessment>(stu_num);
     String title=null;
-    int max_marks=1;
-    int grade=0;
     instructor poster=null;
+    int max_marks=10;
     boolean assessment_submitted=false;
     boolean assessment_closed=false;
     boolean assessment_graded=false;
     void assessment_view();
-    void assesment_grade();
     void assessment_close();
-    void assessment_submit();
+    void assessment_submit(String filename,int id);
+    void graded();
+    int get_max();
 }
 
 class quiz implements assessment_interface{
-
+    String title;
+    instructor poster;
+    int max_marks=1;
+    boolean assessment_submitted;
+    boolean assessment_closed;
+    boolean assessment_graded;
+    public quiz(String title, instructor poster){
+        this.title=title;
+        this.poster=poster;
+    }
+    @Override
+    public void assessment_view(){
+        System.out.println("Question: "+title);
+    }
+    @Override
+    public void assessment_close(){
+        assessment_closed=true;
+    }
+    @Override
+    public void assessment_submit(String filename, int id){
+        grades.get(id).submission=filename;
+    }
+    @Override
+    public void graded(){
+        assessment_graded=true;
+    }
+    public int get_max(){
+        return max_marks;
+    }
 }
 
 class assignment implements assessment_interface{
-
+    String title;
+    instructor poster;
+    int max_marks;
+    boolean assessment_submitted=false;
+    boolean assessment_closed=false;
+    boolean assessment_graded=false;
+    public assignment(String title, instructor poster, int max_marks){
+        this.title=title;
+        this.poster=poster;
+        this.max_marks=max_marks;
+    }
+    @Override
+    public void assessment_view(){
+        System.out.println("Assignment: "+title+"  Max marks: "+max_marks);
+    }
+    @Override
+    public void assessment_close(){
+        assessment_closed=true;
+    }
+    @Override
+    public void assessment_submit(String filename, int id){
+        grades.get(id).submission=filename;
+    }
+    @Override
+    public void graded(){
+        assessment_graded=true;
+    }
+    public int get_max(){
+        return max_marks;
+    }
 }
 
 
@@ -182,7 +418,7 @@ class menu{
         int num=Reader.nextint();
         return (instructor.instructor_arr.get(num));
     }
-    public static student print_students() throws IOException{
+    public static int print_students() throws IOException{
         System.out.println("Students:");
         int size= student.student_arr.size();
         for (int i=0;i<size;i++){
@@ -190,18 +426,19 @@ class menu{
             System.out.println(i+". "+stu.id);
         }
         int num=Reader.nextint();
-        return (student.student_arr.get(num));
+        return (num);
     }
     public static void lecture_slides_input(instructor ins) throws IOException{
+        Scanner scanner=new Scanner(System.in);
         System.out.print("Enter the topic of slides: ");
-        String t= Reader.next();
+        String t= scanner.nextLine();
         System.out.print("Enter the number of slides: ");
         int n= Reader.nextint();
         String[] arr= new String[n];
         System.out.println("Enter the content of slides");
         for (int i=0; i<n; i++){
             System.out.print("Content of slide "+i+": ");
-            String content= Reader.next();
+            String content= scanner.nextLine();
             arr[i]=content;
         }
         Date d=new Date();
@@ -209,10 +446,11 @@ class menu{
         lecture_interface.lecture_arr.add(l);
     }
     public static void lecture_vid_input(instructor ins) throws IOException{
+        Scanner scanner=new Scanner(System.in);
         System.out.print("Enter the topic of video: ");
-        String t= Reader.next();
+        String t= scanner.nextLine();
         System.out.print("Enter the filename of video: ");
-        String vid= Reader.next();
+        String vid= scanner.nextLine();
         int s_size=vid.length();
         if (vid.substring(s_size-4).equals(".mp4")==false){
             System.out.println("Video file not in correct format.");
@@ -221,25 +459,12 @@ class menu{
         Date d = new Date();
         lecture_video v=new lecture_video(t, vid, d, ins);
         lecture_interface.lecture_arr.add(v);
-    }
-    public static void add_comment_ins(instructor ins) throws IOException{
-        System.out.print("Enter comment: ");
-        String com= Reader.next();
-        Date date= new Date();
-        person_interface.comment c= new person_interface.comment(com,date,ins);
-        person_interface.comments_arr.add(c);
-    }
-    public static void add_comment_stu(student stu) throws IOException{
-        System.out.print("Enter comment: ");
-        String com= Reader.next();
-        Date date= new Date();
-        person_interface.comment c= new person_interface.comment(com,date,stu);
-        person_interface.comments_arr.add(c);
-    }
+    }    
 }
 
 public class A2_2020371 {
     public static void main(String[] args) throws IOException{
+        Scanner scanner=new Scanner(System.in);
         Reader.init(System.in);
         instructor I0= new instructor("I0");
         instructor I1= new instructor("I1");
@@ -275,7 +500,7 @@ public class A2_2020371 {
                         }
                     }
                     if (instructor_num==2){
-                        
+                        curr_instructor.add_assessment(curr_instructor);
                     }
                     if (instructor_num==3){
                         int s=lecture_interface.lecture_arr.size();
@@ -285,26 +510,28 @@ public class A2_2020371 {
                         }
                     }
                     if (instructor_num==4){
-                        
+                        curr_instructor.view_assessment();
                     }
                     if (instructor_num==5){
-                        
+                        curr_instructor.grade_assignment(curr_instructor);
                     }
                     if (instructor_num==6){
-                        
+                        curr_instructor.close_assessment();
                     }
                     if (instructor_num==7){
                         curr_instructor.view_comment();
                     }
                     if (instructor_num==8){
-                        menu.add_comment_ins(curr_instructor);
+                        curr_instructor.add_comment(curr_instructor.id);
                     }
                     instructor_num=menu.instructor(curr_instructor);
                 }
             }
 
             else{
-                student curr_student= menu.print_students();
+
+                int num= menu.print_students();
+                student curr_student=student.student_arr.get(num);
                 int student_num=menu.student(curr_student);
                 while (true){
                     if (student_num==7)
@@ -317,19 +544,19 @@ public class A2_2020371 {
                         }
                     }
                     if (student_num==2){
-                        
+                        curr_student.view_assessment();
                     }
                     if (student_num==3){
-                        
+                        curr_student.submit(num);
                     }
                     if (student_num==4){
-                        
+                        curr_student.view_grades(num);
                     }
                     if (student_num==5){
                         curr_student.view_comment();
                     }
                     if (student_num==6){
-                        menu.add_comment_stu(curr_student);
+                        curr_student.add_comment(curr_student.id);
                     }
                     student_num=menu.student(curr_student);
                 }
